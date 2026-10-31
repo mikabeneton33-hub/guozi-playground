@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>國字樂園</title>
+<meta name="description" content="給國小一年級小朋友的國字學習網站：生字卡、描寫、聽音選字、聽寫。免安裝、免登入，資料只留在自己的裝置。">
+<meta name="theme-color" content="#FBF9F3">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="國字樂園">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <span class="mark" aria-hidden="true"></span>
+      <h1>國字樂園<small>GUOZI PLAYGROUND</small></h1>
+    </div>
+    <div class="row topright">
+      <div class="seg" id="voicetoggle" role="group" aria-label="發音來源">
+        <button data-mode="human" title="教育部辭典真人錄音">真人</button>
+        <button data-mode="tts" title="裝置內建合成語音">合成</button>
+      </div>
+      <button class="iconbtn" id="mute" aria-label="音效開關"></button>
+    </div>
+  </header>
+
+  <main>
+    <div id="backbar" class="backbar" hidden><button class="back"></button></div>
+    <section id="v-chars" class="view"></section>
+    <section id="v-lessons" class="view"></section>
+    <section id="v-lesson" class="view"></section>
+    <section id="v-games" class="view"></section>
+    <section id="v-play" class="view"></section>
+    <section id="v-dict" class="view"></section>
+    <section id="v-me" class="view"></section>
+  </main>
+</div>
+
+<nav class="tabbar" aria-label="主選單"></nav>
+
+<div id="backdrop" class="backdrop"></div>
+<div id="sheet" class="sheet" role="dialog" aria-modal="true" aria-label="生字卡"></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

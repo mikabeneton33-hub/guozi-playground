@@ -70,13 +70,19 @@ def locate(wid):
         for n in e:
             if n.endswith("/" + wid + ".wav"): return R, e[n]
     return None, None
-def head_segment(wav, mp3):
-    log = subprocess.run(["ffmpeg", "-hide_banner", "-i", str(wav), "-af", "silencedetect=n=-35dB:d=0.28", "-f", "null", "-"],
+def head_segment(wav, mp3, nsyl):
+    # 靜音門檻依這個檔自己的最大音量決定（有些錄音音量偏小，用固定門檻會把字尾當成靜音）
+    vol = subprocess.run(["ffmpeg", "-hide_banner", "-i", str(wav), "-af", "volumedetect", "-f", "null", "-"], capture_output=True, text=True).stderr
+    peak = float((re.findall(r"max_volume: (-?[0-9.]+) dB", vol) or ["0"])[0])
+    # 單字只唸一個音節，停頓門檻短一點才不會把後面的說明帶進來；詞語要容許音節間的自然停頓
+    d = 0.2 if nsyl == 1 else 0.28
+    log = subprocess.run(["ffmpeg", "-hide_banner", "-i", str(wav), "-af", f"silencedetect=n={peak - 28:.1f}dB:d={d}", "-f", "null", "-"],
                          capture_output=True, text=True).stderr
-    starts = [float(x) for x in re.findall(r"silence_start: ([0-9.]+)", log)]
+    starts = [float(x) for x in re.findall(r"silence_start: (-?[0-9.]+)", log)]
     ends = [float(x) for x in re.findall(r"silence_end: ([0-9.]+)", log)]
     speech_from = ends[0] if starts and starts[0] < 0.05 and ends else 0.0      # 開頭若有靜音先跳過
-    cut = next((s for s in starts if s > speech_from + 0.1), None)
+    minlen = 0.1 if nsyl == 1 else 0.2 * nsyl                                    # 詞語每個音節至少 0.2 秒，不切在詞中間；單字（含輕聲）本來就短
+    cut = next((s for s in starts if s > speech_from + minlen), None)
     if cut is None: return False
     a, b = max(0, speech_from - 0.05), cut + 0.08
     subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(wav), "-ss", f"{a:.3f}", "-to", f"{b:.3f}",
@@ -90,7 +96,7 @@ for k, wid in sorted(found.items()):
         if not R: miss.append(k + "（聲音檔不在包裡）"); continue
         wav = CACHE / f"{wid}.wav"
         if not wav.exists(): wav.write_bytes(extract(R, tuple(ent)))
-        if not head_segment(wav, mp3): miss.append(k + "（找不到詞目段）"); continue
+        if not head_segment(wav, mp3, len(k.split("|")[0])): miss.append(k + "（找不到詞目段）"); continue
     vmap[k] = wid
 for f in outdir.glob("*.mp3"):
     if f.stem not in set(vmap.values()): f.unlink()
@@ -100,5 +106,7 @@ head = """// 真人發音對照：「字詞|注音」→ 教育部《國語辭�
 // 來源：中華民國教育部《國語辭典簡編本》，CC BY-ND 3.0 TW（國語辭典公眾授權網）。
 """
 (ROOT / "js" / "voice_map.js").write_text(head + "export const MOE = " + json.dumps(vmap, ensure_ascii=False) + ";\n", encoding="utf8")
-print(f"收錄 {len(vmap)} 條；略過 {len(miss)} 條")
-for m in miss[:30]: print("  -", m)
+print(f"收錄 {len(vmap)} 條；略過 {len(miss)} 條（另有 {len(need) - len(found)} 條簡編本讀音與本站不同，不收）")
+from collections import Counter
+for why, n in Counter(m[m.rindex("（"):] for m in miss).most_common(): print(f"  {why} {n} 條")
+(CACHE / "missing.txt").write_text("\n".join(miss), encoding="utf8")

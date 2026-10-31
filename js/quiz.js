@@ -118,13 +118,17 @@ export function runPassage(host, lesson, { exit }) {
     const blk = el("div", "qblock");
     blk.append(el("div", "q", rubyHTML(q.q)));
     const opts = el("div", "opts");
-    q.options.forEach((o, k) => {
+    // 資料裡正確答案固定寫在第一個，顯示時打亂
+    const order = shuffle(q.options.map((o, k) => k));
+    order.forEach(k => {
+      const o = q.options[k];
       const b = el("button", "opt text", rubyHTML(o));
+      b.dataset.k = k;
       b.onclick = () => {
         for (const x of opts.children) x.disabled = true;
         const ok = k === q.answer;
         b.classList.add(ok ? "right" : "wrong"); ok ? sfx.correct() : sfx.wrong();
-        if (!ok) opts.children[q.answer].classList.add("right"); else right++;
+        if (!ok) opts.querySelector(`[data-k="${q.answer}"]`).classList.add("right"); else right++;
         if (++answered === p.questions.length) {
           if (right === p.questions.length) store.addStars(1);
           done.style.display = "flex"; sfx.win();

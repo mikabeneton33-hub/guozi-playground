@@ -32,9 +32,23 @@ export function zyCol(zy = "", cls = "") {
 /** 一格字：國字＋右側注音；沒有注音的字和標點不佔注音欄。 */
 const cell = (c, zy) => zy ? `<span class="zc"><span class="h">${esc(c)}</span>${zyCol(zy)}</span>` : `<span class="zc bare"><span class="h">${esc(c)}</span></span>`;
 
+// 避頭尾：這些標點不能放在行首，黏住前一個字；開引號不能放在行尾，黏住下一個字
+const CLOSE = new Set("，。、？！：；」』）…");
+const OPEN = new Set("「『（");
+
 /** 標注音文字轉 HTML。換行 → <br>。整段的讀法以 aria-label 交給螢幕報讀。 */
 export function rubyHTML(str) {
-  const html = tokens(str).map(t => t.c === "\n" ? "<br>" : cell(t.c, t.zy)).join("");
+  const groups = []; let pendingOpen = "";
+  for (const t of tokens(str)) {
+    if (t.c === "\n") { groups.push({ br: true }); continue; }
+    const h = cell(t.c, t.zy);
+    if (OPEN.has(t.c)) { pendingOpen += h; continue; }
+    if (CLOSE.has(t.c) && groups.length && !groups.at(-1).br) { groups.at(-1).h.push(h); continue; }
+    groups.push({ h: [pendingOpen + h].filter(Boolean) }); pendingOpen = "";
+  }
+  // 開引號已經併進下一個字（同一個字串裡有兩格），所以用格數判斷要不要包成不斷行的一組
+  const cells = h => (h.match(/class="zc/g) || []).length;
+  const html = groups.map(g => g.br ? "<br>" : (g.h.length > 1 || cells(g.h[0]) > 1) ? `<span class="nb">${g.h.join("")}</span>` : g.h[0]).join("") + pendingOpen;
   return `<span class="zt" aria-label="${esc(plain(str).replace(/\n/g, ""))}">${html}</span>`;
 }
 

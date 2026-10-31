@@ -28,7 +28,10 @@ export function renderDictation(host) {
     });
     host.append(row);
   };
-  mk("範圍（含之前學過的字）", LESSONS.map((l, k) => [`到${l.no}`, k]), () => cfg.upto, v => cfg.upto = v);
+  host.append(el("div", "group-title", "<b>範圍（含之前學過的字）</b>"));
+  const sel = el("select"); LESSONS.forEach((l, k) => { const o = el("option", "", `${l.no}　${l.title}`); o.value = k; if (k === cfg.upto) o.selected = true; sel.append(o); });
+  sel.onchange = () => { cfg.upto = Number(sel.value); renderDictation(host); };
+  const picker = el("label", "picker", "<span>練習到</span>"); picker.append(sel); host.append(picker);
   mk("題數", [["5 個", 5], ["10 個", 10], ["全部", 999]], () => cfg.count, v => cfg.count = v);
   mk("唸的速度", [["正常", false], ["放慢", true]], () => cfg.slow, v => cfg.slow = v);
 

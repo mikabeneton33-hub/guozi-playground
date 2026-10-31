@@ -26,7 +26,8 @@ function checkMarked(str, lessonId, where) {
   for (const t of tokens(str)) {
     if (!t.han) continue;
     if (t.zy != null && !t.zy.split(/\s+/).every(s => ZY.test(s))) err(`${where}：「${t.c}」的注音格式不對：${t.zy}`);
-    if (known.has(t.c) && t.zy) note(`${where}：「${t.c}」已學過，不需要標注音`);
+    // 已學過的字只有在讀「非主要讀音」時才該標（例如「睡著」），標成主要讀音就是多餘
+    if (known.has(t.c) && t.zy && CHARS[t.c] && t.zy === CHARS[t.c].zy) note(`${where}：「${t.c}」已學過，不需要標注音`);
     if (!known.has(t.c) && !t.zy) err(`${where}：「${t.c}」在 ${lessonId} 前還沒學過，必須標注音`);
   }
 }

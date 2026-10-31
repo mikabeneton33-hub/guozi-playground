@@ -94,6 +94,7 @@ svg.i { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-widt
 .zc { display: inline-flex; align-items: center; vertical-align: middle; margin: .1em .04em; }
 .zc .h { line-height: 1; }
 .zc.bare { margin-right: .08em; }
+.nb { display: inline-block; white-space: nowrap; }
 .zyc { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; width: 1.25em; font-size: .36em; line-height: .98; margin-left: .06em;
   font-family: var(--kai); color: var(--ink-2); position: relative; }
 .zyc b { display: block; font-weight: 400; position: relative; }
@@ -133,6 +134,10 @@ svg.i { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-widt
 .hubitem .ico { width: 44px; height: 44px; border-radius: 12px; background: var(--red-2); color: var(--red); display: grid; place-items: center; flex: none; }
 .hubitem b { display: block; font-size: 17px; font-weight: 900; letter-spacing: .04em; }
 .hubitem span.d { font-size: 13px; color: var(--ink-2); }
+
+/* 範圍選單 */
+.picker { display: flex; align-items: center; gap: 12px; margin: 0 0 16px; font-weight: 700; color: var(--ink-2); }
+.picker select { flex: 1; min-height: 48px; padding: 0 14px; border-radius: var(--radius); border: 1px solid var(--line-2); background: var(--card); color: var(--ink); font: inherit; font-weight: 700; }
 
 /* ---- 遊戲／測驗 ---- */
 .gcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }

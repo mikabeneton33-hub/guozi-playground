@@ -38,7 +38,15 @@ document.querySelectorAll("#voicetoggle button").forEach(b => b.onclick = () => 
 $("#mute").onclick = () => { sfx.toggle(); renderTop(); };
 renderTop();
 
-const placeholderNote = () => BOOK.placeholder ? el("div", "notice", `<span><b>示範資料</b>　目前的生字和課次是版型示範，${BOOK.name}的正式內容製作中。</span>`) : null;
+const placeholderNote = () => BOOK.placeholder ? el("div", "notice", `<span><b>示範資料</b>　目前的生字和課次是版型示範，正式內容製作中。</span>`) : null;
+/** 課次範圍選單：課很多時用下拉選單，不用一長串按鈕。 */
+export function rangePicker(max, value, onChange) {
+  const wrap = el("label", "picker", `<span>練習到</span>`);
+  const sel = el("select");
+  LESSONS.forEach((L, i) => { if (i > max) return; const o = el("option", "", `${L.no}　${L.title}`); o.value = i; if (i === value) o.selected = true; sel.append(o); });
+  sel.onchange = () => onChange(Number(sel.value));
+  wrap.append(sel); return wrap;
+}
 
 // ================================================================= 進度判斷
 const unlocked = i => store.get().unlockAll || i === 0 || store.lessonStars(LESSONS[i - 1].id) >= 1;
@@ -70,7 +78,7 @@ function openSheet(c, list) {
   sh.innerHTML = `<div class="grab"></div>
     <div class="nav"><button aria-label="上一個字" ${idx <= 0 ? "disabled" : ""} data-d="-1">${icon("left")}</button><span>${idx + 1} / ${list.length}</span><button aria-label="下一個字" ${idx >= list.length - 1 ? "disabled" : ""} data-d="1">${icon("right")}</button></div>
     <div class="stage">${tzg(c)}<div class="meta"><div class="zy">${d.zy}</div>
-      <div class="facts"><span class="fact">${d.radical}部</span><span class="fact">${d.strokes} 畫</span></div>${d.emoji ? pic(d.emoji) : ""}</div></div>
+      <div class="facts"><span class="fact">${d.radical}部</span><span class="fact">${d.strokes} 畫</span>${d.poly ? '<span class="fact">多音字</span>' : ""}</div>${d.emoji ? pic(d.emoji) : ""}</div></div>
     <h4>造詞</h4><div class="words"></div>
     <h4>例句</h4><button class="sentence" aria-label="唸出例句">${rubyHTML(d.sentence)}</button>
     <div class="actions"><button class="btn ghost" data-act="hear">${icon("volume")}聽讀音</button><button class="btn red" data-act="write">${icon("pen")}描寫這個字</button></div>`;
@@ -103,7 +111,8 @@ addEventListener("keydown", e => { if (e.key === "Escape") closeSheet(); });
 // ================================================================= 課程
 function viewLessons() {
   const v = $("#v-lessons"); v.innerHTML = "";
-  v.append(el("h2", "h2", BOOK.name), el("p", "sub", `${BOOK.grade}。過關就能解鎖下一課。`));
+  v.append(el("h2", "h2", BOOK.name), el("p", "sub", `${BOOK.grade}，共 ${LESSONS.length} 課、${allChars().length} 個字。過關就能解鎖下一課。`));
+  if (BOOK.note) v.append(el("div", "notice", `<span>${BOOK.note}</span>`));
   const n = placeholderNote(); if (n) v.append(n);
   const list = el("div", "lessons");
   LESSONS.forEach((L, i) => {
@@ -169,10 +178,7 @@ function viewGames() {
   const v = $("#v-games"); v.innerHTML = "";
   const top = maxUnlocked(); if (gs.upto == null || gs.upto > top) gs.upto = top;
   v.append(el("h2", "h2", "遊戲"), el("p", "sub", "選好範圍，玩已經學過的字。"));
-  v.append(el("div", "group-title", "<b>範圍</b>"));
-  const row = el("div", "pillrow");
-  LESSONS.forEach((L, i) => { if (i > top) return; const b = el("button", "pill", `到${L.no}`); b.setAttribute("aria-pressed", String(gs.upto === i)); b.onclick = () => { gs.upto = i; viewGames(); }; row.append(b); });
-  v.append(row);
+  v.append(rangePicker(top, gs.upto, i => { gs.upto = i; viewGames(); }));
   const pool = [...learnedThrough(LESSONS[gs.upto].id)];
   const cards = el("div", "gcards");
   const card = (ic, t, d, fn) => { const b = el("button", "hubitem", `<span class="ico">${icon(ic)}</span><span><b>${t}</b><span class="d">${d}</span></span>`); b.onclick = () => { sfx.tap(); fn(); }; cards.append(b); };

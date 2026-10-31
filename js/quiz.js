@@ -3,7 +3,7 @@ import { CHARS } from "./data.js";
 import { voice, sfx, tts } from "./audio.js";
 import { store } from "./store.js";
 import { el, icon, tzg, shuffle, wait } from "./ui.js";
-import { rubyHTML, plain } from "./ruby.js";
+import { rubyHTML, plain, zyCol } from "./ruby.js";
 import { stamp } from "./confetti.js";
 
 // ---- 出題 ----
@@ -58,7 +58,8 @@ export function runQuiz(host, { title, questions, onFinish, again, exit }) {
     host.append(prompt);
     const opts = el("div", "opts");
     q.options.forEach(o => {
-      const b = el("button", "opt " + (q.kind === "read" ? "zy" : ""), o.label);
+      const b = el("button", "opt " + (q.kind === "read" ? "zy" : ""), q.kind === "read" ? zyCol(o.label, "solo") : o.label);
+      b.setAttribute("aria-label", o.label);
       b.onclick = () => pick(b, o, opts);
       opts.append(b);
     });

@@ -6,6 +6,7 @@ import { $, el, icon, tzg, pic, shuffle, toast } from "./ui.js";
 import { makeQuestions, runQuiz, runPassage, starsFor, SEAL } from "./quiz.js";
 import { runWrite } from "./write.js";
 import { renderDictation } from "./dictation.js";
+import { runMatch } from "./match.js";
 
 // ================================================================= 外殼
 const TABS = [["chars", "生字", "grid"], ["lessons", "課程", "book"], ["games", "遊戲", "game"], ["dict", "聽寫", "headphone"], ["me", "我的", "me"]];
@@ -178,6 +179,7 @@ function viewGames() {
   card("volume", "聽音選字", "聽讀音，從四個字裡選出來", () => startGame("listen", pool));
   card("grid", "看字選音", "看國字，選出正確的注音", () => startGame("read", pool));
   card("pen", "寫寫看", "隨機抽 5 個字，在田字格裡描寫", () => startWrite(shuffle(pool).slice(0, 5), { back: () => tab("games") }));
+  card("list", "字音配對", "翻牌，把國字和注音配成一對", () => startMatch(pool));
   v.append(cards);
 }
 function startGame(kind, pool) {
@@ -185,6 +187,12 @@ function startGame(kind, pool) {
   const again = () => startGame(kind, pool), exit = () => tab("games");
   show("play", { highlight: "games", back: { label: "遊戲", to: exit } });
   runQuiz(v, { title: kind === "listen" ? "聽音選字" : "看字選音", again, exit, questions: makeQuestions({ targets: pool, pool, kinds: [kind], n: 10 }) });
+}
+
+function startMatch(pool) {
+  const v = $("#v-play"), exit = () => tab("games");
+  show("play", { highlight: "games", back: { label: "遊戲", to: exit } });
+  runMatch(v, pool, { again: () => startMatch(pool), exit });
 }
 
 // ================================================================= 聽寫
@@ -200,7 +208,7 @@ function viewMe() {
   for (const t of store.daily().tasks) {
     const def = TASK_POOL.find(x => x.id === t.id), done = t.n >= t.goal;
     const b = el("button", "task" + (done ? " done" : ""), `<span class="ck">${done ? "✓" : ""}</span><span class="t">${def.label}</span><span class="p">${t.n} / ${t.goal}</span>`);
-    b.onclick = () => ({ chars: () => tab("chars"), lessons: () => tab("lessons"), listen: () => tab("games"), read: () => tab("games"), write: () => tab("games") }[def.go]?.());
+    b.onclick = () => ({ chars: () => tab("chars"), lessons: () => tab("lessons"), listen: () => tab("games"), read: () => tab("games"), write: () => tab("games"), match: () => tab("games") }[def.go]?.());
     tasks.append(b);
   }
   v.append(tasks);

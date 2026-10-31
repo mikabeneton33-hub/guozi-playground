@@ -8,7 +8,7 @@ const def = () => ({
   streak: { count: 0, last: null },
   unlockAll: false,
   listen: { played: 0, correct: 0 }, read: { played: 0, correct: 0 },
-  write: { count: 0 }, dictation: { count: 0 },
+  write: { count: 0 }, dictation: { count: 0 }, match: { games: 0, best: null },
 });
 let data = def();
 try { data = { ...def(), ...JSON.parse(localStorage.getItem(KEY) || "{}") }; } catch {}
@@ -20,6 +20,7 @@ export const TASK_POOL = [
   { id: "listen", goal: 5, label: "聽音選字答對 5 題",  go: "listen" },
   { id: "read",   goal: 5, label: "看字選音答對 5 題",  go: "read" },
   { id: "write",  goal: 2, label: "描寫 2 個字",        go: "write" },
+  { id: "match",  goal: 1, label: "完成 1 場字音配對",  go: "match" },
   { id: "lesson", goal: 1, label: "完成 1 次課程闖關",  go: "lessons" },
 ];
 const pad = n => String(n).padStart(2, "0");
@@ -49,6 +50,7 @@ export const store = {
     return { firstPass: prev < 1 && stars >= 1, better: stars > prev };
   },
   lessonStars(id) { return data.lessons[id] || 0; },
+  matchBest(moves) { if (data.match.best == null || moves < data.match.best) { data.match.best = moves; save(); } },
   setUnlockAll(v) { data.unlockAll = !!v; save(); },
   daily() { const d = ensureDaily(); save(); return d; },
   event(type, n = 1) {

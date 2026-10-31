@@ -4,6 +4,22 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import content_src as M
 from moedict import readings, get
 ROOT = pathlib.Path(__file__).resolve().parent.parent
+# 讀音以《國語辭典簡編本》為準（給國中小學生用，依《國語一字多音審訂表》），簡編本沒有才查《重編國語辭典修訂本》
+def _load_concised():
+    import openpyxl, glob
+    xs = sorted(glob.glob(str(ROOT/'tools'/'.cache'/'concised'/'dict_concised_*.xlsx')))
+    if not xs: sys.exit("找不到簡編本資料庫，請先跑 python3 tools/build-voice-map.py（會下載到 tools/.cache/concised/）")
+    out = {}
+    for r in openpyxl.load_workbook(xs[-1], read_only=True).active.iter_rows(min_row=2, values_only=True):
+        if r[0] and r[6]:
+            z = ' '.join(('˙'+x[:-1]) if x.endswith('˙') else x for x in str(r[6]).replace('\u3000',' ').split())
+            out.setdefault(str(r[0]), [])
+            if z not in out[str(r[0])]: out[str(r[0])].append(z)
+    return out
+CONCISED = _load_concised()
+_moe_readings = readings
+def readings(w):
+    return CONCISED.get(w) or _moe_readings(w)
 def info_of(c):
     d = get(c) or {}
     return {'radical': d.get('radical'), 'strokes': d.get('stroke_count')}
@@ -22,7 +38,9 @@ DEFAULT={'啊':'˙ㄚ','吧':'˙ㄅㄚ','牠':'ㄊㄚ','誰':'ㄕㄟˊ','玩':'�
  '拍':'ㄆㄞ','追':'ㄓㄨㄟ','抓':'ㄓㄨㄚ','掃':'ㄙㄠˇ','暖':'ㄋㄨㄢˇ','綠':'ㄌㄩˋ','紅':'ㄏㄨㄥˊ','遠':'ㄩㄢˇ','亮':'ㄌㄧㄤˋ','冊':'ㄘㄜˋ','校':'ㄒㄧㄠˋ',
  '見':'ㄐㄧㄢˋ','把':'ㄅㄚˇ','三':'ㄙㄢ','六':'ㄌㄧㄡˋ','日':'ㄖˋ','兒':'ㄦˊ','麗':'ㄌㄧˋ','聽':'ㄊㄧㄥ','不':'ㄅㄨˋ','足':'ㄗㄨˊ','倒':'ㄉㄠˇ',
  '個':'ㄍㄜˋ','們':'˙ㄇㄣ','子':'ㄗˇ','地':'ㄉㄧˋ','過':'ㄍㄨㄛˋ','沒':'ㄇㄟˊ','哪':'ㄋㄚˇ','更':'ㄍㄥˋ','難':'ㄋㄢˊ','興':'ㄒㄧㄥˋ','乾':'ㄍㄢ','腳':'ㄐㄧㄠˇ','黑':'ㄏㄟ','頁':'ㄧㄝˋ','次':'ㄘˋ','弟':'ㄉㄧˋ','荷':'ㄏㄜˊ','葉':'ㄧㄝˋ','請':'ㄑㄧㄥˇ','雨':'ㄩˇ',
- '分':'ㄈㄣ','從':'ㄘㄨㄥˊ','張':'ㄓㄤ','騎':'ㄑㄧˊ','風':'ㄈㄥ','吹':'ㄔㄨㄟ','幅':'ㄈㄨˊ','滑':'ㄏㄨㄚˊ','幾':'ㄐㄧˇ','臺':'ㄊㄞˊ'}
+ '分':'ㄈㄣ','從':'ㄘㄨㄥˊ','張':'ㄓㄤ','騎':'ㄑㄧˊ','風':'ㄈㄥ','吹':'ㄔㄨㄟ','幅':'ㄈㄨˊ','滑':'ㄏㄨㄚˊ','幾':'ㄐㄧˇ','臺':'ㄊㄞˊ',
+ '和':'ㄏㄢˋ','羊':'ㄧㄤˊ','殼':'ㄎㄜˊ','夾':'ㄐㄧㄚˊ','縫':'ㄈㄥˊ','百':'ㄅㄞˇ','忘':'ㄨㄤˋ','累':'ㄌㄟˋ','蓋':'ㄍㄞˋ','喔':'ㄛ',
+ '錢':'ㄑㄧㄢˊ','場':'ㄔㄤˇ','北':'ㄅㄟˇ','聞':'ㄨㄣˊ','它':'ㄊㄚ','被':'ㄅㄟˋ','當':'ㄉㄤ','數':'ㄕㄨˇ'}
 CTX_SKIP=set('的了')
 def by_context(plain, i, c):
     found=set()
@@ -68,11 +86,13 @@ def check_word(w,z,where):
     rs=[r for r in rs if len(r.split())==len(w)]
     if rs:
         if norm(z) in rs: return norm(z)
+        if len(rs) > 1: errors.append(f"{where}：詞「{w}」寫 {z}，辭典有多個讀音 {rs}，請指定"); return z
         fixed.append(f"{w}：{z} → {rs[0]}（依辭典）"); return rs[0]
     syl=z.split()
     for c,s in zip(w,syl):
         cr=readings(c)
-        if s not in cr and s.replace('˙','') not in [r.replace('˙','') for r in cr]:
+        base=lambda x: re.sub('[˙ˊˇˋ]','',x)
+        if s not in cr and not (s.startswith('˙') and base(s) in [base(r) for r in cr]):
             errors.append(f"{where}：詞「{w}」的「{c}」讀 {s} 不在字典 {cr}")
     if len(w)>1: notes.append(f"辭典沒有「{w}」這個詞條，已逐字核對")
     return z
@@ -90,9 +110,14 @@ for c in order:
     if c not in sent: errors.append(f"{c}：例句沒有本字")
     chars[c]=dict(zy=zy,radical=info_of(c)['radical'],strokes=info_of(c)['strokes'],emoji=emo,words=words,sentence=annotate(sent,li,f"{c} 例句"),
                   poly=len(set(rs))>1)
+def cn(n):
+    D='零一二三四五六七八九'
+    if n<10: return D[n]
+    t,u=divmod(n,10)
+    return (('' if t==1 else D[t])+'十'+(D[u] if u else ''))
 lessons=[]
 for i,(lid,title,cs,pt,ptext,qs) in enumerate(M.LESSONS):
-    lessons.append(dict(id=lid,no=f"第{'一二三四五六七八九十'[i] if i<10 else ('十'+'一二三四五六七八九'[i-10])}課",title=title,chars=list(cs),
+    lessons.append(dict(id=lid,no=f"第{cn(i+1)}課",term="下" if lid>=getattr(M,'TERM_SPLIT','L99') else "上",title=title,chars=list(cs),
       passage=dict(title=annotate(pt,i,f"{lid} 標題"),text=annotate(ptext,i,f"{lid} 短文"),
         questions=[dict(q=annotate(q,i,f"{lid} 題目"),options=[annotate(o,i,f"{lid} 選項") for o in opts],answer=0) for q,opts in qs])))
 for n in sorted(set(notes)): pass
@@ -106,7 +131,7 @@ J=lambda x: json.dumps(x,ensure_ascii=False)
 out=[open(ROOT/'tools'/'data_header.js',encoding='utf8').read().rstrip()+'\n', 'export const LESSONS = [']
 for l in lessons:
     p=l['passage']
-    out.append(f'  {{ id: {J(l["id"])}, no: {J(l["no"])}, title: {J(l["title"])}, chars: {J(l["chars"])},')
+    out.append(f'  {{ id: {J(l["id"])}, no: {J(l["no"])}, term: {J(l["term"])}, title: {J(l["title"])}, chars: {J(l["chars"])},')
     out.append(f'    passage: {{ title: {J(p["title"])},')
     out.append(f'      text: {J(p["text"])},')
     out.append('      questions: [')

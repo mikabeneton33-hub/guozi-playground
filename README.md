@@ -6,7 +6,14 @@
 
 ## 內容
 
-一上 **19 課、177 字**：教育部《國小學童常用字詞調查報告書》（2002 二版）表二十五中，部編本《國語》第 1 冊出現過的全部字。依主題分課（數一數、我的家、上學去、動物朋友……），課次與學校課本不同。每個字有讀音、部首、筆畫、兩個造詞、一句例句，每課有一篇短文和兩題理解題，全部自編。
+一年級 **52 課、506 字**，選字依據教育部《國小學童常用字詞調查報告書》（2002 二版）表二十五「本字彙表與部編國語科教科書收字比較表」：
+
+| 學期 | 課數 | 字數 | 選字範圍 |
+|---|---|---|---|
+| 一上 | 19 課 | 177 字 | 部編本《國語》第 1 冊出現過的全部字 |
+| 一下 | 33 課 | 329 字 | 第 2 冊新出現（第 1 冊沒有）的字 |
+
+依主題分課（數一數、我的家、上學去、四季、動物園、吃飯了……），課次與學校課本不同。每個字有讀音、部首、筆畫、兩個造詞、一句例句；每課一篇短文和兩題理解題。全部自編。
 
 ## 現有功能
 
@@ -34,14 +41,14 @@
 tools/content_src.py   內容原稿：課次、生字、讀音、造詞、例句、短文（要改內容改這裡）
 tools/gen_data.py      產生 js/data.js：自動標注音、讀音核對，有錯就不輸出
 tools/check-data.mjs   資料檢查（有錯 exit 1）
-tools/build-voice-map.mjs   從注音樂園挑出用得到的真人錄音
+tools/build-voice-map.py    從教育部簡編本官方聲音檔挑出用到的字詞（HTTP Range 只抓需要的檔）
 tools/build-font.py    楷體子集化（fonts/gzkai.woff2）
 ```
 
 ```bash
 python3 tools/gen_data.py                              # 改了 content_src.py 之後（會查萌典，結果快取在 tools/.cache/）
 node tools/check-data.mjs
-node tools/build-voice-map.mjs ../zhuyin-playground
+python3 tools/build-voice-map.py                      # 需要 curl、ffmpeg、pip install openpyxl
 python3 tools/build-font.py LXGWWenKaiTC-Regular.ttf  # 需要 pip install fonttools brotli
 python3 -m http.server 8000                           # 本機預覽
 ```
@@ -50,14 +57,16 @@ python3 -m http.server 8000                           # 本機預覽
 
 ## 技術
 
-單純 HTML / CSS / JavaScript（ES modules），沒有框架、沒有建置步驟。PWA（manifest + service worker）。發音有「真人／合成」兩種模式：真人錄音來自教育部《國語辭典簡編本》，沒有錄音的字詞自動改用瀏覽器合成語音。
+單純 HTML / CSS / JavaScript（ES modules），沒有框架、沒有建置步驟。PWA（manifest + service worker）。發音有「真人／合成」兩種模式：真人錄音取自教育部《國語辭典簡編本》官方聲音檔（國語辭典公眾授權網，CC BY-ND 3.0 TW），只收讀音與本站注音完全一致者、只擷取開頭朗讀詞目的段落；沒有錄音的字詞改用瀏覽器合成語音。
 
 ## 還沒做
 
-1. 真人錄音覆蓋率約 57%，其餘用合成語音。
-2. 部件拼字；詞語與句子練習：量詞、相反詞、排句子、標點。
-3. 一下（部編本第 2 冊新增的 329 字）。
-4. 筆順：描寫改為判斷筆畫順序，教育部標準筆順核對後才上線。
+1. 部件拼字；詞語與句子練習：量詞、相反詞、排句子、標點。
+2. 筆順：描寫改為判斷筆畫順序，教育部標準筆順核對後才上線。
+
+## 部署（GitHub Pages）
+
+Repo → **Settings → Pages** → Source 選 **Deploy from a branch**，Branch 選 `main`、資料夾 `/ (root)`，存檔。約一分鐘後網址為 `https://mikabeneton33-hub.github.io/guozi-playground/`。全站都是相對路徑，放在子路徑下可以直接使用；根目錄的 `.nojekyll` 讓 Pages 原樣提供檔案。
 
 ## 授權
 

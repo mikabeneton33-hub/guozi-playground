@@ -58,6 +58,7 @@ function viewChars() {
   v.append(el("h2", "h2", "生字"), el("p", "sub", "點一個字，聽讀音、看造詞和例句。"));
   const n = placeholderNote(); if (n) v.append(n);
   LESSONS.forEach((L, li) => {
+    if (L.term && L.term !== LESSONS[li - 1]?.term) v.append(termHead(L.term));
     v.append(el("div", "group-title", `<b>${L.no}　${L.title}</b><span>${L.chars.length} 個字</span>`));
     const grid = el("div", "cgrid");
     for (const c of L.chars) {
@@ -114,8 +115,9 @@ function viewLessons() {
   v.append(el("h2", "h2", BOOK.name), el("p", "sub", `${BOOK.grade}，共 ${LESSONS.length} 課、${allChars().length} 個字。過關就能解鎖下一課。`));
   if (BOOK.note) v.append(el("div", "notice", `<span>${BOOK.note}</span>`));
   const n = placeholderNote(); if (n) v.append(n);
-  const list = el("div", "lessons");
+  let list = null;
   LESSONS.forEach((L, i) => {
+    if (!list || (L.term && L.term !== LESSONS[i - 1]?.term)) { if (L.term) v.append(termHead(L.term)); list = el("div", "lessons"); v.append(list); }
     const open = unlocked(i), st = store.lessonStars(L.id);
     const card = el("button", "lcard" + (open ? "" : " locked"),
       `<span class="no">${L.no}</span><span><h3>${L.title}</h3><span class="preview">${L.chars.join("")}</span></span>` +
@@ -124,7 +126,10 @@ function viewLessons() {
     card.onclick = () => { if (!open) return toast("先通過上一課，就能解鎖這一課"); sfx.tap(); viewLesson(i); };
     list.append(card);
   });
-  v.append(list);
+}
+function termHead(t) {
+  const n = LESSONS.filter(l => l.term === t), chars = n.reduce((a, l) => a + l.chars.length, 0);
+  return el("h3", "term", `一年級${t}學期<span>${n.length} 課・${chars} 字</span>`);
 }
 function viewLesson(i) {
   const L = LESSONS[i], v = $("#v-lesson"); v.innerHTML = "";

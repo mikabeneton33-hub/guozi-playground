@@ -58,6 +58,11 @@ svg.i { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-widt
   background-size: 1px 100%, 100% 1px; background-position: center, center; background-repeat: no-repeat; }
 .tzg .ch { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--kai); line-height: 1; color: var(--ink); pointer-events: none; }
 
+/* 學期分段 */
+.term { display: flex; align-items: baseline; gap: 12px; margin: 34px 0 6px; padding-bottom: 8px; border-bottom: 2px solid var(--ink); font-size: 20px; font-weight: 900; letter-spacing: .08em; }
+.term span { font-size: 13px; font-weight: 700; color: var(--ink-3); letter-spacing: .04em; }
+.lessons + .term, .cgrid + .term { margin-top: 40px; }
+
 /* 生字格子 */
 .group-title { display: flex; align-items: baseline; gap: 10px; margin: 26px 0 12px; }
 .group-title b { font-size: 17px; font-weight: 900; letter-spacing: .04em; }

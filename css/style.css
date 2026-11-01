@@ -37,6 +37,7 @@ svg.i { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-widt
 .topright { flex-wrap: nowrap; flex: none; }
 .iconbtn { width: 44px; height: 44px; border-radius: 12px; background: var(--card); border: 1px solid var(--line); display: grid; place-items: center; color: var(--ink-2); }
 .iconbtn:active { background: var(--paper-2); }
+a.iconbtn { text-decoration: none; }
 .seg { display: inline-flex; border: 1px solid var(--line-2); border-radius: 12px; overflow: hidden; background: var(--card); }
 .seg button { min-height: 44px; padding: 0 14px; font-size: 14px; font-weight: 700; color: var(--ink-2); }
 .seg button[aria-pressed="true"] { background: var(--ink); color: #fff; }
@@ -249,6 +250,9 @@ svg.i { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-widt
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
 @media (max-width: 440px) {
+  .brand small { display: none; }
+  .topbar { gap: 8px; }
+  .seg button { padding: 0 11px; }
   .sheet .stage { grid-template-columns: 138px 1fr; gap: 14px; }
   .sheet .stage .tzg .ch { font-size: 86px; }
   .sheet .meta .zy { font-size: 24px; }

@@ -36,6 +36,7 @@ function renderTop() {
 }
 document.querySelectorAll("#voicetoggle button").forEach(b => b.onclick = () => { voice.mode = b.dataset.mode; renderTop(); sfx.tap(); });
 $("#mute").onclick = () => { sfx.toggle(); renderTop(); };
+$("#home").innerHTML = icon("home");
 renderTop();
 
 const placeholderNote = () => BOOK.placeholder ? el("div", "notice", `<span><b>示範資料</b>　目前的生字和課次是版型示範，正式內容製作中。</span>`) : null;
